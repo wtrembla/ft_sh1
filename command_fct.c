@@ -6,7 +6,7 @@
 /*   By: wtrembla <wtrembla@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2014/04/23 15:47:16 by wtrembla          #+#    #+#             */
-/*   Updated: 2014/04/29 16:35:32 by wtrembla         ###   ########.fr       */
+/*   Updated: 2014/04/30 17:11:20 by wtrembla         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,13 @@
 
 static void		improper_command(int ret, char *command)
 {
-	if (ret == -1)
-		ft_putjoin_fd("ft_sh1: command not found ", command, 2);
+	if (ret == -1 && (!ft_strncmp(command, "./", 2)
+					|| !ft_strncmp(command, "../", 3) || command[0] == '/'))
+		ft_putjoin_fd("ft_sh1: no such file or directory: ", command, 2);
+	else if (ret == -1)
+		ft_putjoin_fd("ft_sh1: command not found: ", command, 2);
 	else if (ret == -2)
-		ft_putjoin_fd("ft_sh1: execute/search permission denied ", command, 2);
+		ft_putjoin_fd("ft_sh1: permission denied: ", command, 2);
 }
 
 static char		*check_command(char *command)
@@ -30,8 +33,8 @@ static char		*check_command(char *command)
 	ret = 0;
 	env = init_env(NULL);
 	tmp = NULL;
-	if ((!ft_strncmp(command, "./", 2) || command[0] == '/')
-		&& !(ret = check_path(command)))
+	if ((!ft_strncmp(command, "./", 2) || !ft_strncmp(command, "../", 3)
+		|| command[0] == '/') && !(ret = check_path(command)))
 		return (ft_strdup(command));
 	else if (!ret)
 	{

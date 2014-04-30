@@ -6,11 +6,19 @@
 /*   By: wtrembla <wtrembla@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2014/04/24 15:29:45 by wtrembla          #+#    #+#             */
-/*   Updated: 2014/04/29 16:12:45 by wtrembla         ###   ########.fr       */
+/*   Updated: 2014/04/30 19:04:20 by wtrembla         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_sh1.h"
+
+static void		improper_path(int ret, char *path)
+{
+	if (ret == -1)
+		ft_putjoin_fd("cd: no such file or directory: ", path, 2);
+	else if (ret == -2)
+		ft_putjoin_fd("cd: permission denied: ", path, 2);
+}
 
 static char		*get_newdir(t_env *env, char *av)
 {
@@ -83,25 +91,27 @@ void			apply_cd(char *command)
 {
 	char	**av;
 	char	*new_dir;
+	int		ret;
 	int		size;
 	t_env	*env;
 
+	ret = 0;
 	av = ft_strsplit(command, ' ');
+	new_dir = NULL;
 	size = av_size(av);
 	env = init_env(NULL);
 	if (size > 2)
-	{
 		ft_putendl_fd("cd: syntax error", 2);
-		return ;
-	}
-	if (size == 1)
+	else if (size == 1 || (size == 2 && !ft_strcmp(av[1], "~")))
 		new_dir = ft_strdup(env->home);
 	else
 		new_dir = get_newdir(env, av[1]);
-	if (chdir(new_dir) == -1)
-		ft_putendl_fd("cd: directory access error", 2);
-	else
+	if (new_dir && !(ret = check_path(new_dir)) && !chdir(new_dir))
 		update_env(&env, new_dir);
+	else if (new_dir && !(ret = check_path(new_dir)) && chdir(new_dir) == -1)
+		ft_putjoin_fd("cd: not a directory: ", av[1], 2);
+	if (new_dir && ret && av[1])
+		improper_path(ret, av[1]);
 	ft_strdel(&new_dir);
 	del_av(av);
 }
